@@ -32,7 +32,7 @@ A simple RESTful API for managing todo items built with Flask and SQLAlchemy.
 ### Create a Todo
 
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"title":"Buy groceries"}' http://localhost:5001/todos
+curl -X POST -H "Content-Type: application/json" -d '{"title":"Add due_date feature to todo api", "due_date":"2025-04-13"}' http://localhost:5001/todos
 ```
 
 ### Get All Todos

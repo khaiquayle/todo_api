@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 from database import db
 from models import Todo  # Import Todo model first
+from validators import check_date, check_date_format
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'
@@ -35,7 +37,14 @@ def post_todos():
         return jsonify({'error': 'Title cannot be empty'}), 400
     if len(data['title']) > 500:
         return jsonify({'error': f"Title too long (title length: {len(data['title'])}; maximum 500 characters)"}), 400
-    new_todo = Todo(title=data['title'])
+
+    due_date = None
+    if 'due_date' in data and data['due_date'] is not None:
+        if not (check_date_format(data['due_date']) and check_date(data['due_date'])):
+            return jsonify({'error': 'Due date is invalid'}), 400
+        due_date = datetime.strptime(data['due_date'], '%Y-%m-%d')  # Convert to datetime
+
+    new_todo = Todo(title=data['title'], due_date=due_date)  # Set due_date here
     db.session.add(new_todo)
     db.session.commit()
     print(f"Created todo: {new_todo.to_dict()}")  # Debug print
@@ -64,6 +73,13 @@ def put_todo(id):
         if not isinstance(data['completed'], bool):
             return jsonify({'error': 'Completed must be a boolean'}), 400
         todo.completed = data['completed']
+
+    if 'due_date' in data:
+        if data['due_date'] is not None:
+            if not (check_date_format(data['due_date']) and check_date(data['due_date'])):
+                return jsonify({'error': 'Due date is invalid'}), 400
+        # Allow clearing due_date with None
+        todo.due_date = data['due_date']
 
     db.session.commit()
     return jsonify(todo.to_dict())
