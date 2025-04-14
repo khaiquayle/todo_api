@@ -65,3 +65,6 @@ curl -X DELETE http://localhost:5001/todos/1
 - Title cannot be empty
 - Title cannot exceed 500 characters
 - Completed status must be a boolean 
+- Due date must follow ____-__-__
+- Due date must be after 1970
+- Due date can be null
