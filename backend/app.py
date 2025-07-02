@@ -4,11 +4,11 @@ from models import Todo, User  # Import User model
 from validators import check_date, check_date_format
 from datetime import datetime
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from flask_cors import CORS  # Add this import
+from flask_cors import CORS
 import os
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your_jwt_secret_key')  # Use environment variable
@@ -23,7 +23,7 @@ with app.app_context():
 
 @app.route('/')
 def home():
-    return "To-Do API is running!"
+    return "To-Do API backend is running!"
 
 @app.route('/todos', methods=['GET'])
 @jwt_required()
@@ -35,7 +35,7 @@ def get_todos():
 @app.route('/todos', methods=['POST'])
 @jwt_required()
 def post_todos():
-    current_user_id = int(get_jwt_identity())  # Convert string ID back to integer
+    current_user_id = int(get_jwt_identity())
     data = request.get_json()
     if not data or 'title' not in data:
         return jsonify({'error': 'Title is required'}), 400
@@ -60,14 +60,14 @@ def post_todos():
 @app.route('/todos/<int:id>', methods=['GET'])
 @jwt_required()
 def get_todo(id):
-    current_user_id = int(get_jwt_identity())  # Convert string ID back to integer
+    current_user_id = int(get_jwt_identity())
     todo = Todo.query.filter_by(id=id, user_id=current_user_id).first_or_404()
     return jsonify(todo.to_dict())
 
 @app.route('/todos/<int:id>', methods=['PUT'])
 @jwt_required()
 def put_todo(id):
-    current_user_id = int(get_jwt_identity())  # Convert string ID back to integer
+    current_user_id = int(get_jwt_identity())
     todo = Todo.query.filter_by(id=id, user_id=current_user_id).first_or_404()
     data = request.get_json()
     
@@ -99,7 +99,7 @@ def put_todo(id):
 @app.route('/todos/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_todo(id):
-    current_user_id = int(get_jwt_identity())  # Convert string ID back to integer
+    current_user_id = int(get_jwt_identity())
     todo = Todo.query.filter_by(id=id, user_id=current_user_id).first_or_404()
     db.session.delete(todo)
     db.session.commit()
@@ -140,6 +140,42 @@ def login():
 
     access_token = create_access_token(identity=str(user.id))  # Convert user.id to string
     return jsonify(access_token=access_token), 200
+
+@app.route('/api/auth/register', methods=['POST'])
+def api_register():
+    data = request.get_json()
+    username = data.get('email') or data.get('username')  # frontend sends 'email', model uses 'username'
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'msg': 'Username and password are required'}), 400
+
+    if User.query.filter_by(username=username).first():
+        return jsonify({'msg': 'User already exists'}), 400
+
+    user = User(username=username)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+
+    access_token = create_access_token(identity=str(user.id))
+    return jsonify(token=access_token), 200
+
+@app.route('/api/auth/login', methods=['POST'])
+def api_login():
+    data = request.get_json()
+    username = data.get('email') or data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'msg': 'Username and password are required'}), 400
+
+    user = User.query.filter_by(username=username).first()
+    if not user or not user.check_password(password):
+        return jsonify({'msg': 'Bad username or password'}), 401
+
+    access_token = create_access_token(identity=str(user.id))
+    return jsonify(token=access_token), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

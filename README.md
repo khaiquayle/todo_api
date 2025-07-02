@@ -54,12 +54,17 @@ TODO_APP/
    cd frontend
    ```
 
-2. Install dependencies:
+2. Remove node_modules and package-lock.json:
+   ```
+   rm -rf node_modules package-lock.json
+   ```
+
+3. Install dependencies:
    ```
    npm install
    ```
 
-3. Start the development server:
+4. Start the development server:
    ```
    npm start
    ```

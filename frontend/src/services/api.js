@@ -28,28 +28,68 @@ api.interceptors.response.use(
 );
 
 // Example API functions - implement these yourself
-export const login = async (username, password) => {
-  // Implement login API call
+export const loginUser = async (email, password) => {
+  const response = await fetch(`${API_URL}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: email, password }),
+  });
+  if (!response.ok) throw new Error((await response.json()).msg || 'Login failed');
+  return response.json();
 };
 
-export const register = async (username, password) => {
-  // Implement register API call
+export const registerUser = async (email, password) => {
+  const response = await fetch(`${API_URL}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: email, password }),
+  });
+  if (!response.ok) throw new Error((await response.json()).msg || 'Registration failed');
+  return response.json();
 };
 
-export const getTodos = async () => {
-  // Implement get todos API call
+export const fetchTodos = async (token) => {
+  const response = await fetch(`${API_URL}/todos`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error('Failed to fetch todos');
+  return response.json();
 };
 
-export const createTodo = async (todo) => {
-  // Implement create todo API call
+export const addTodo = async (token, title) => {
+  const response = await fetch(`${API_URL}/todos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ title }),
+  });
+  if (!response.ok) throw new Error('Failed to add todo');
+  return response.json();
 };
 
-export const updateTodo = async (id, todo) => {
-  // Implement update todo API call
+export const updateTodo = async (token, id, updates) => {
+  const response = await fetch(`${API_URL}/todos/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  if (!response.ok) throw new Error('Failed to update todo');
+  return response.json();
 };
 
-export const deleteTodo = async (id) => {
-  // Implement delete todo API call
+export const deleteTodo = async (token, id) => {
+  const response = await fetch(`${API_URL}/todos/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error('Failed to delete todo');
+  // No JSON to return for 204 No Content
+  return;
 };
 
 export default api; 

@@ -1,28 +1,33 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { CssBaseline, Container } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Navbar from './components/Navbar';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import TodoList from './pages/TodoList';
 
-// Import your components here
-// import Login from './components/Login';
-// import Register from './components/Register';
-// import TodoList from './components/TodoList';
+function PrivateRoute({ children }) {
+  const { token } = useAuth();
+  return token ? children : <Navigate to="/login" />;
+}
 
 function App() {
   return (
-    <>
-      <CssBaseline />
-      <Container>
-        <Router>
-          <Routes>
-            {/* Add your routes here */}
-            {/* <Route path="/login" element={<Login />} /> */}
-            {/* <Route path="/register" element={<Register />} /> */}
-            {/* <Route path="/todos" element={<TodoList />} /> */}
-            <Route path="/" element={<div>Welcome to Todo App</div>} />
-          </Routes>
-        </Router>
-      </Container>
-    </>
+    <AuthProvider>
+      <Router>
+        <Navbar />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/todos" element={
+            <PrivateRoute>
+              <TodoList />
+            </PrivateRoute>
+          } />
+          <Route path="/" element={<Navigate to="/todos" />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
